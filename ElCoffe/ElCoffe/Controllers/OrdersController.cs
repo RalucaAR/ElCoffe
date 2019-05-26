@@ -1,93 +1,72 @@
-﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+using ElCoffe.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.EntityFrameworkCore;
 
 namespace ElCoffe.Controllers
 {
     public class OrdersController : Controller
     {
-        // GET: Orders
-        public ActionResult Index()
+        private DbConn db = new DbConn();
+
+        // GET: api/Todo
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<Order>>> GetAll()
         {
-            return View();
+            return await db.Orders.ToListAsync();
         }
 
-        // GET: Orders/Details/5
-        public ActionResult Details(int id)
+        // GET: api/Todo/5
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Order>> GetOrder(long id)
         {
-            return View();
+            var ord = await db.Orders.FindAsync(id);
+
+            if (ord == null)
+            {
+                return NotFound();
+            }
+
+            return ord;
         }
 
-        // GET: Orders/Create
-        public ActionResult Create()
-        {
-            return View();
-        }
-
-        // POST: Orders/Create
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Create(IFormCollection collection)
+        public async Task<ActionResult<Order>> Create([FromBody]Order ord)
         {
-            try
-            {
-                // TODO: Add insert logic here
+            db.Orders.Add(ord);
+            await db.SaveChangesAsync();
 
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
+            return CreatedAtAction(nameof(GetOrder), new { id = ord.Id }, ord);
         }
 
-        // GET: Orders/Edit/5
-        public ActionResult Edit(int id)
+        // PUT: api/Todo/5
+        [HttpPut]
+        public async Task<IActionResult> UpdateOrder(Order ord)
         {
-            return View();
+            db.Entry(ord).State = EntityState.Modified;
+            await db.SaveChangesAsync();
+
+            return NoContent();
         }
 
-        // POST: Orders/Edit/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
+        // DELETE: api/Todo/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteOrder(long id)
         {
-            try
-            {
-                // TODO: Add update logic here
+            var ord = await db.Orders.FindAsync(id);
 
-                return RedirectToAction(nameof(Index));
-            }
-            catch
+            if (ord == null)
             {
-                return View();
+                return NotFound();
             }
-        }
 
-        // GET: Orders/Delete/5
-        public ActionResult Delete(int id)
-        {
-            return View();
-        }
+            db.Orders.Remove(ord);
+            await db.SaveChangesAsync();
 
-        // POST: Orders/Delete/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, IFormCollection collection)
-        {
-            try
-            {
-                // TODO: Add delete logic here
-
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
+            return NoContent();
         }
     }
 }
