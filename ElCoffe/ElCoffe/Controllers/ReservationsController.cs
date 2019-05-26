@@ -1,93 +1,72 @@
-﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+using ElCoffe.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.EntityFrameworkCore;
 
 namespace ElCoffe.Controllers
 {
     public class ReservationsController : Controller
     {
-        // GET: Reservations
-        public ActionResult Index()
+        private DbConn db = new DbConn();
+
+        // GET: api/Todo
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<Reservation>>> GetAll()
         {
-            return View();
+            return await db.Reservations.ToListAsync();
         }
 
-        // GET: Reservations/Details/5
-        public ActionResult Details(int id)
+        // GET: api/Todo/5
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Reservation>> GetReservation(long id)
         {
-            return View();
+            var rez = await db.Reservations.FindAsync(id);
+
+            if (rez == null)
+            {
+                return NotFound();
+            }
+
+            return rez;
         }
 
-        // GET: Reservations/Create
-        public ActionResult Create()
-        {
-            return View();
-        }
-
-        // POST: Reservations/Create
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Create(IFormCollection collection)
+        public async Task<ActionResult<Reservation>> Create([FromBody]Reservation rez)
         {
-            try
-            {
-                // TODO: Add insert logic here
+            db.Reservations.Add(rez);
+            await db.SaveChangesAsync();
 
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
+            return CreatedAtAction(nameof(GetReservation), new { id = rez.Id }, rez);
         }
 
-        // GET: Reservations/Edit/5
-        public ActionResult Edit(int id)
+        // PUT: api/Todo/5
+        [HttpPut]
+        public async Task<IActionResult> UpdateReservation(Reservation rez)
         {
-            return View();
+            db.Entry(rez).State = EntityState.Modified;
+            await db.SaveChangesAsync();
+
+            return NoContent();
         }
 
-        // POST: Reservations/Edit/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
+        // DELETE: api/Todo/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteReservation(long id)
         {
-            try
-            {
-                // TODO: Add update logic here
+            var rez = await db.Reservations.FindAsync(id);
 
-                return RedirectToAction(nameof(Index));
-            }
-            catch
+            if (rez == null)
             {
-                return View();
+                return NotFound();
             }
-        }
 
-        // GET: Reservations/Delete/5
-        public ActionResult Delete(int id)
-        {
-            return View();
-        }
+            db.Reservations.Remove(rez);
+            await db.SaveChangesAsync();
 
-        // POST: Reservations/Delete/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, IFormCollection collection)
-        {
-            try
-            {
-                // TODO: Add delete logic here
-
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
+            return NoContent();
         }
     }
 }
